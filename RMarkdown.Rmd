@@ -1,0 +1,93 @@
+---
+title: "Replication_sample"
+author: "Jacob Grippin"
+date: "7/7/2024"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+## Introdouction
+```{r preparations, include=FALSE}
+#Load packages
+#This code chunk is used to generate the output that is needed, but do not print the results. I will print those later. 
+library(glue)
+attach(mtcars)
+library(gtsummary)
+library(gt)
+library(ggplot2)
+library(ggcorrplot)
+
+#Import and load datasets. 
+mydata = read.csv("EquationCitations.csv")
+#Store column names of dataset as a new object. Will print these later. 
+names = colnames(mydata)
+
+SelfvOthercites <-mydata %>% 
+  select(journal, cites)
+#This shows median, first and 3rd quartile. 
+journal_cites_table = tbl_summary(SelfvOthercites, by = journal, statistic = list(all_continuous() ~ "{mean} ({sd})"))
+
+SelfvOthercites2 <- mydata %>% 
+  select(journal, cites, mainequations, pages, selfcites, othercites)
+
+EqReg <- glm(cites  ~ mainequations + journal + pages, data = SelfvOthercites2) %>%
+  tbl_regression(conf.level= .95, tidy_fun = broom.helpers::tidy_parameters)
+
+
+SelfvOthercites3 <- mydata %>% 
+  select(cites, mainequations, pages)
+corr <- round(cor(SelfvOthercites3), 1)
+
+# Plot
+corrPlot = ggcorrplot(corr, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, 
+           method="circle", 
+           colors = c("tomato2", "white", "springgreen3"), 
+           title="Correlogram of Equation Citations", 
+           ggtheme=theme_bw)
+
+```
+
+This is a short *memo*. Describing a dataset, showing some visuals. Put 2 spaces at end of line for output to go to next line.  
+
+Load EquationCitations. Column names of dataset included below. [Link to dataset description ](https://rdrr.io/cran/AER/man/EquationCitations.html)
+**`r colnames(mydata)` **
+
+
+### Variable Descriptions 
+I am interested in variables for journal and cites. Their variable information is included below in a nice frequency counts table.  
+  
+`r journal_cites_table`  
+
+### Results
+I am interested in displaying a regression equation. Predicting the number of cites based on the number of main equations, journal type and number of pages. View the table below to see the results of the regression equation.
+`r EqReg`  
+  
+  
+Here is the correlation plot. 
+```{r, echo = FALSE, fig.height=4}
+# Plot
+ggcorrplot(corr, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, 
+           method="circle", 
+           colors = c("tomato2", "white", "springgreen3"), 
+           title="Correlogram of Equation Citations", 
+           ggtheme=theme_bw)
+
+```
+  
+
+## Conclusion  
+Following links have good reference information:  
+[Rmarkdown Webiste](https://rmarkdown.rstudio.com/) - tutorial rmarkdown  
+[Rmarkdown cheatsheet](https://rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf) - cheatsheet 
+
+
+
